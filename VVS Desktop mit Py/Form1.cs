@@ -67,15 +67,21 @@ namespace VVS_Desktop_mit_Py
 
 
                 string line = Linie.Text;
+                //Runtime.PythonDLL = @"python310.dll";
+                //Environment.SetEnvironmentVariable("PYTHONHOME", @"\python");
+                //Environment.SetEnvironmentVariable("PYTHONNET_PYDLL", @"\python\python38.dll");
 
-                //Runtime.PythonDLL = @"C:\Users\PostT\AppData\Local\Programs\Python\Python310\python310.dll";
-                Runtime.PythonDLL = @"python310.dll";
+                Environment.SetEnvironmentVariable("PYTHONHOME", @"python");
+                Runtime.PythonDLL = @"python\python38.dll";
+
+                //string exePath = Application.ExecutablePath;
+
+                //MessageBox.Show(exePath);            
+
                 PythonEngine.Initialize();
                 using (Py.GIL())
                 {
                     var PythonScript = Py.Import("vvscalc");
-                    //5006118 Stuttgart HBF (tief)
-                    //17803 Schlierbach Kirche
                     var arg1 = new PyString(station);
                     var arg2 = new PyString(line);
                     res = PythonScript.InvokeMethod("get_departure", arg1, arg2);
@@ -170,7 +176,7 @@ namespace VVS_Desktop_mit_Py
             }
             catch (Exception f)
             {
-                MessageBox.Show("Error: Wahrscheinlich wird die Haltestelle nicht von dieser Linie heute angefahren");
+                MessageBox.Show("Error: Wahrscheinlich wird die Haltestelle nicht von dieser Linie heute angefahren" + f.Message);
                 Console.WriteLine(f.Message);
                 PythonEngine.Shutdown();
             }
