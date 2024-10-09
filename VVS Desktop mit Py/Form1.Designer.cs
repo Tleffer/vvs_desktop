@@ -57,7 +57,7 @@
             show_result.TabIndex = 0;
             show_result.Text = "Ergebnis Anzeigen";
             show_result.UseVisualStyleBackColor = false;
-            show_result.Click += button1_Click;
+            show_result.Click += button_result_Click;
             // 
             // other
             // 
@@ -125,7 +125,6 @@
             Linie.Name = "Linie";
             Linie.Size = new Size(163, 35);
             Linie.TabIndex = 7;
-            //Linie.TextChanged += this.Linie_TextChanged;
             // 
             // label1
             // 
@@ -137,7 +136,6 @@
             label1.Size = new Size(61, 30);
             label1.TabIndex = 8;
             label1.Text = "Linie:";
-            label1.Click += label1_Click;
             // 
             // other_field
             // 

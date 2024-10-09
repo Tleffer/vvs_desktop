@@ -37,6 +37,7 @@ namespace VVS_Desktop_mit_Py
         {
             if (fav1_box.Text != fav1_name)
             {
+                //Versucht die Station zu finden
                 if (ListStation.Contains(fav1_box.Text))
                 {
                     fav1_id = ListID[ListStation.IndexOf(fav1_box.Text)];
@@ -45,9 +46,9 @@ namespace VVS_Desktop_mit_Py
                 {
                     if (ListCity.Contains(fav1_box.Text))
                     {
+                        //Wenn Stadt gefunden wurde, aber keine Haltestellen, das Fenster mit allen Haltestellen der Stadt öffnen
                         FormStations stations = new FormStations(ListStation, ListID, ListCity, fav1_box.Text);
                         stations.Show();
-                        //goto second;
                     }
                     else
                     {
@@ -56,9 +57,9 @@ namespace VVS_Desktop_mit_Py
                     }
                 }
             }
-            //second:
             if (fav2_box.Text != fav2_name)
             {
+                //Versucht die Station zu finden
                 if (ListStation.Contains(fav2_box.Text))
                 {
                     fav2_id = ListID[ListStation.IndexOf(fav2_box.Text)];
@@ -68,9 +69,9 @@ namespace VVS_Desktop_mit_Py
                 {
                     if (ListCity.Contains(fav2_box.Text))
                     {
+                        //Wenn Stadt gefunden wurde, aber keine Haltestellen, das Fenster mit allen Haltestellen der Stadt öffnen
                         FormStations stations = new FormStations(ListStation, ListID, ListCity, fav2_box.Text);
                         stations.Show();
-                        //goto second;
                     }
                     else
                     {
@@ -79,6 +80,7 @@ namespace VVS_Desktop_mit_Py
                     }
                 }
             }
+            //Favoriten speichern
             favourite.fav1ID = fav1_id;
             favourite.fav2ID = fav2_id;
             favourite.fav1Name = fav1_name;
@@ -90,11 +92,13 @@ namespace VVS_Desktop_mit_Py
 
         private void cancel_Click(object sender, EventArgs e)
         {
+            //Schließt das Fenster
             this.Close();
         }
 
         private void FormFav_Load(object sender, EventArgs e)
         {
+            //Die Favoriten werden geladen
             fav1_name = favourite.fav1Name;
             fav2_name = favourite.fav2Name;
             fav1_id = favourite.fav1ID;

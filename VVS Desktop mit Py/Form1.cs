@@ -11,30 +11,42 @@ namespace VVS_Desktop_mit_Py
 {
     public partial class Form1 : Form
     {
+        /// <summary>
+        /// Hauptsteuerung des Programms
+        /// </summary>
 
-        //Dictionary<string, string> stations = new Dictionary<string, string>();
+        //Initialisierrung der Variablen
+        //PyObject sind Objekte bzw Variablen die aus Pythen übertragen werden
         List<string> listStation = new List<string>();
         List<string> listID = new List<string>();
         List<string> listCity = new List<string>();
         PyObject res;
-        PyObject resd;
-        PyObject resdg;
-        PyObject resg;
+        PyObject res_delay;
+        PyObject res_delay_all;
+        PyObject res_all;
         fav favourites;
-        string favPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "favourites.xml");
+        //Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) ist der Path zu Appdata, an dem die favoriten gespeichert werden
+        string favPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), @"VVS\favourites.xml");
+
         public Form1()
         {
             InitializeComponent();
+            string dir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "VVS");
+            if (!Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void button_result_Click(object sender, EventArgs e)
         {
+
+            //alles in try catch, falls der PC keine Internetverbindung hat
             try
             {
                 output.Text = "";
                 output.Enabled = false;
                 string station = "";
-                //17803 = Schlierbach Kirche
                 if (fav2.Checked)
                 {
                     station = favourites.fav2ID;
@@ -46,14 +58,17 @@ namespace VVS_Desktop_mit_Py
                 }
                 else if (other.Checked)
                 {
+                    //erst wird nach stationsnamen geschaut
                     if (listStation.Contains(other_field.Text))
                     {
                         station = listID[listStation.IndexOf(other_field.Text)];
                     }
                     else
                     {
+                        //wenn keine station gefunden wird nach der stadt
                         if (listCity.Contains(other_field.Text))
                         {
+                            //Ein Fenster mit allen möglichen Optionen der Stationen wird geöffnet
                             FormStations stations = new FormStations(listStation, listID, listCity, other_field.Text);
                             stations.Show();
                         }
@@ -67,106 +82,103 @@ namespace VVS_Desktop_mit_Py
 
 
                 string line = Linie.Text;
-                //Runtime.PythonDLL = @"python310.dll";
-                //Environment.SetEnvironmentVariable("PYTHONHOME", @"\python");
-                //Environment.SetEnvironmentVariable("PYTHONNET_PYDLL", @"\python\python38.dll");
-
+                //Variablen werden gesetzt
                 Environment.SetEnvironmentVariable("PYTHONHOME", @"python");
                 Runtime.PythonDLL = @"python\python38.dll";
 
-                //string exePath = Application.ExecutablePath;
-
-                //MessageBox.Show(exePath);            
 
                 PythonEngine.Initialize();
                 using (Py.GIL())
                 {
+                    //hier werden Variablen für die Python Fuktion gesetzt: arg1 und arg2
                     var PythonScript = Py.Import("vvscalc");
                     var arg1 = new PyString(station);
                     var arg2 = new PyString(line);
+                    //Python Funktionen werden ausgeführt
                     res = PythonScript.InvokeMethod("get_departure", arg1, arg2);
-                    resg = PythonScript.InvokeMethod("get_departure_all", arg1);
-                    resdg = PythonScript.InvokeMethod("get_delay_all", arg1);
-                    resd = PythonScript.InvokeMethod("get_delay", arg1, arg2);
+                    res_all = PythonScript.InvokeMethod("get_departure_all", arg1);
+                    res_delay_all = PythonScript.InvokeMethod("get_delay_all", arg1);
+                    res_delay = PythonScript.InvokeMethod("get_delay", arg1, arg2);
+                    //Der folgende Code wird nur ausgeführt, wenn EINE Linie oder EIN zug eingeben wird
                     if (line != "")
                     {
+                        //Die Python Funktion gibt einen PyObject aus, welcher zu einem String konvertiert wird
+                        //Dieser String wird formatiert und geteilt, sodass er zu einem Array wird
                         string result = res.ToString();
-                        string resultd = resd.ToString();
-                        //MessageBox.Show(result);
-                        //MessageBox.Show(resultd);
+                        string result_delay = res_delay.ToString();
                         result = result.Substring(1, result.Length - 2);
-                        resultd = resultd.Substring(1, resultd.Length - 2);
-                        string[] results = result.Split(',');
-                        string[] resultds = resultd.Split(',');
-                        for (int i = 0; i < results.Length; i++)
+                        result_delay = result_delay.Substring(1, result_delay.Length - 2);
+                        string[] result_array = result.Split(',');
+                        string[] result_delay_array = result_delay.Split(',');
+                        //Die einzelnen Einträge werden formatiert
+                        for (int i = 0; i < result_array.Length; i++)
                         {
-                            results[i] = results[i].Substring(1, results[i].Length - 2);
+                            result_array[i] = result_array[i].Substring(1, result_array[i].Length - 2);
                             if (i >= 1)
                             {
-                                results[i] = results[i].Substring(1);
+                                result_array[i] = result_array[i].Substring(1);
                             }
                         }
-                        for (int i = 0; i < resultds.Length; i++)
+                        for (int i = 0; i < result_delay_array.Length; i++)
                         {
-                            resultds[i] = resultds[i].Substring(1, resultds[i].Length - 2);
+                            result_delay_array[i] = result_delay_array[i].Substring(1, result_delay_array[i].Length - 2);
                             if (i >= 1)
                             {
-                                resultds[i] = resultds[i].Substring(1);
+                                result_delay_array[i] = result_delay_array[i].Substring(1);
                             }
                         }
-                        //MessageBox.Show("" + results[1]);
-                        //MessageBox.Show("" + resultds[1]);
-                        //PythonEngine.Shutdown();
                         output.Enabled = true;
-                        for (int i = 0; i < results.Length; i++)
+                        //Hier wird die Verspätung hinzugefügt
+                        for (int i = 0; i < result_array.Length; i++)
                         {
-                            if (resultds[i] != "0")
+                            if (result_delay_array[i] != "0")
                             {
-                                output.Text += results[i] + " - " + resultds[i] + " Minuten zu spät" + Environment.NewLine;
+                                output.Text += result_array[i] + " - " + result_delay_array[i] + " Minuten zu spät" + Environment.NewLine;
                             }
                             else
                             {
-                                output.Text += results[i] + Environment.NewLine;
+                                output.Text += result_array[i] + Environment.NewLine;
                             }
                         }
                     }
                     else
                     {
-                        string resultg = resg.ToString();
-                        resultg = resultg.Substring(1, resultg.Length - 2);
-                        string[] resultgs = resultg.Split(',');
+                        //Dieser Code wird nur ausgeführt, wenn KEINE Linie under KEIN Zug angegeben wurde
+                        //Funktioniert sonst aber relativ Ähnlich zu dem obrigen
+                        string result_all = res_all.ToString();
+                        result_all = result_all.Substring(1, result_all.Length - 2);
+                        string[] result_all_array = result_all.Split(',');
 
-                        string resultdg = resdg.ToString();
-                        resultdg = resultdg.Substring(1, resultdg.Length - 2);
-                        string[] resultdgs = resultdg.Split(',');
+                        string result_delay_all = res_delay_all.ToString();
+                        result_delay_all = result_delay_all.Substring(1, result_delay_all.Length - 2);
+                        string[] result_delay_all_array = result_delay_all.Split(',');
 
-                        for (int i = 0; i < resultgs.Length; i++)
+                        for (int i = 0; i < result_all_array.Length; i++)
                         {
-                            resultgs[i] = resultgs[i].Substring(1, resultgs[i].Length - 2);
+                            result_all_array[i] = result_all_array[i].Substring(1, result_all_array[i].Length - 2);
                             if (i >= 1)
                             {
-                                resultgs[i] = resultgs[i].Substring(1);
+                                result_all_array[i] = result_all_array[i].Substring(1);
                             }
                         }
-                        for (int i = 0; i < resultdgs.Length; i++)
+                        for (int i = 0; i < result_delay_all_array.Length; i++)
                         {
-                            resultdgs[i] = resultdgs[i].Substring(1, resultdgs[i].Length - 2);
+                            result_delay_all_array[i] = result_delay_all_array[i].Substring(1, result_delay_all_array[i].Length - 2);
                             if (i >= 1)
                             {
-                                resultdgs[i] = resultdgs[i].Substring(1);
+                                result_delay_all_array[i] = result_delay_all_array[i].Substring(1);
                             }
                         }
-                        //PythonEngine.Shutdown();
                         output.Enabled = true;
-                        for (int i = 0; i < resultgs.Length; i++)
+                        for (int i = 0; i < result_all_array.Length; i++)
                         {
-                            if (resultdgs[i] != "0")
+                            if (result_delay_all_array[i] != "0")
                             {
-                                output.Text += resultgs[i] + " - " + resultdgs[i] + " Minuten zu spät" + Environment.NewLine;
+                                output.Text += result_all_array[i] + " - " + result_delay_all_array[i] + " Minuten zu spät" + Environment.NewLine;
                             }
                             else
                             {
-                                output.Text += resultgs[i] + Environment.NewLine;
+                                output.Text += result_all_array[i] + Environment.NewLine;
                             }
                         }
                     }
@@ -176,7 +188,8 @@ namespace VVS_Desktop_mit_Py
             }
             catch (Exception f)
             {
-                MessageBox.Show("Error: Wahrscheinlich wird die Haltestelle nicht von dieser Linie heute angefahren" + f.Message);
+                //Error Ausgabe
+                MessageBox.Show("Error: Wahrscheinlich wird die Haltestelle nicht von dieser Linie heute angefahren | Error: " + f.Message);
                 Console.WriteLine(f.Message);
                 PythonEngine.Shutdown();
             }
@@ -184,6 +197,7 @@ namespace VVS_Desktop_mit_Py
 
         private void other_CheckedChanged(object sender, EventArgs e)
         {
+            //Die Eingabe für eine Andere Linie wird entsperrt oder gesperrt
             if (other.Checked)
             {
                 other_field.ReadOnly = false;
@@ -197,8 +211,10 @@ namespace VVS_Desktop_mit_Py
             }
         }
 
+        //Wird beim erstmaligen Laden ausgeführt
         private void Form1_Load(object sender, EventArgs e)
         {
+            //Die Tabelle (.csv Datei) mit den Stationsnamen wird in Listen geladen
             StreamReader stream1 = new StreamReader(@"vvs_stations_compressed.csv", Encoding.UTF8);
 
             while (!stream1.EndOfStream)
@@ -209,13 +225,12 @@ namespace VVS_Desktop_mit_Py
                 listStation.Add(values[0]);
                 listID.Add(values[1]);
                 listCity.Add(values[2]);
-
-                //stations.Add(values[0], values[1]);
             }
             stream1.Close();
 
             try
             {
+                //Es wird Versucht die Favoriten aus der XML Datei zu laden
                 FileStream stream = new FileStream(favPath, FileMode.Open, FileAccess.Read);
                 XmlSerializer serializer = new XmlSerializer(typeof(fav));
                 favourites = (fav)serializer.Deserialize(stream);
@@ -225,6 +240,7 @@ namespace VVS_Desktop_mit_Py
             {
                 favourites = new fav();
             }
+            //Die Textboxen der Favoriten werden formatiert
             if (favourites.fav1Name == "")
             {
                 fav1.Text = "Favorit 1";
@@ -245,12 +261,14 @@ namespace VVS_Desktop_mit_Py
 
         private void button1_Click_1(object sender, EventArgs e)
         {
+            //Das Fenster zum Speichern der Favoriten wird geöffnet
             FormFav favform = new FormFav(favourites, listStation, listID, listCity, this);
             favform.Show();
         }
 
         public void updateButton()
         {
+            //Nach dem Stzen der Favoriten werden die Buttons geupdatet
             if (favourites.fav1Name == "")
             {
                 fav1.Text = "Favorit 1";
@@ -271,15 +289,11 @@ namespace VVS_Desktop_mit_Py
 
         private void general_serialize_Tick(object sender, EventArgs e)
         {
+            //Die Favoriten werden gespeichert
             FileStream stream = new FileStream(favPath, FileMode.Create, FileAccess.Write);
             XmlSerializer serializer = new XmlSerializer(typeof(fav));
             serializer.Serialize(stream, favourites);
             stream.Close();
-
-        }
-
-        private void label1_Click(object sender, EventArgs e)
-        {
 
         }
     }

@@ -27,6 +27,7 @@ namespace VVS_Desktop_mit_Py
 
         private void FormStations_Load(object sender, EventArgs e)
         {
+            //Alle Stationen der Stadt werden aufgelistet
             stations_text.Text = "";
             for (int i = 0; i < ListStation.Count; i++)
             {

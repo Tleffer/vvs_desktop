@@ -9,6 +9,7 @@ namespace VVS_Desktop_mit_Py
     [Serializable]
     public class fav
     {
+        //Eine einfache Klassen zum speichern der Favoriten
         public string fav1ID = "";
         public string fav2ID = "";
 
